@@ -15,7 +15,6 @@
  */
 package com.google.idea.blaze.dart;
 
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.idea.blaze.base.command.buildresult.OutputArtifactResolver;
@@ -54,7 +53,7 @@ public class DartPrefetchFileSource implements PrefetchFileSource, OutputsProvid
   }
 
   @Override
-  public Collection<ArtifactLocation> selectAllRelevantOutputs(TargetIdeInfo target) {
+  public Collection<ArtifactLocation> selectOutputsToCache(TargetIdeInfo target) {
     return getDartSources(target);
   }
 

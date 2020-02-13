@@ -23,7 +23,7 @@ import com.google.idea.blaze.base.ideinfo.ProtoWrapper;
 import com.google.idea.blaze.base.ideinfo.TargetKey;
 import com.google.idea.blaze.base.ideinfo.TargetMap;
 import com.google.idea.blaze.base.sync.aspects.BlazeIdeInterfaceState;
-import com.google.idea.blaze.base.sync.projectview.WorkspaceLanguageSettings;
+import java.io.File;
 import java.util.Objects;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -33,47 +33,50 @@ public final class ProjectTargetData implements ProtoWrapper<ProjectData.TargetD
 
   public final TargetMap targetMap;
   @Nullable public final BlazeIdeInterfaceState ideInterfaceState;
-  public final RemoteOutputArtifacts remoteOutputs;
+  public final TrackedOutputArtifacts trackedOutputArtifacts;
 
   public ProjectTargetData(
       TargetMap targetMap,
       @Nullable BlazeIdeInterfaceState ideInterfaceState,
-      RemoteOutputArtifacts remoteOutputs) {
+      TrackedOutputArtifacts trackedOutputArtifacts) {
     this.targetMap = targetMap;
     this.ideInterfaceState = ideInterfaceState;
-    this.remoteOutputs = remoteOutputs;
+    this.trackedOutputArtifacts = trackedOutputArtifacts;
   }
 
-  public static ProjectTargetData fromProto(ProjectData.TargetData proto) {
+  public static ProjectTargetData fromProto(ProjectData.TargetData proto, File outputBase) {
     TargetMap targetMap = TargetMap.fromProto(proto.getTargetMap());
     BlazeIdeInterfaceState ideInterfaceState =
         proto.hasIdeInterfaceState()
             ? BlazeIdeInterfaceState.fromProto(proto.getIdeInterfaceState())
             : null;
-    RemoteOutputArtifacts remoteOutputs = RemoteOutputArtifacts.fromProto(proto.getRemoteOutputs());
-    return new ProjectTargetData(targetMap, ideInterfaceState, remoteOutputs);
+    TrackedOutputArtifacts trackedOutputArtifacts =
+        proto.hasTrackedOutputArtifacts()
+            ? TrackedOutputArtifacts.fromProto(proto.getTrackedOutputArtifacts(), outputBase)
+            : proto.hasRemoteOutputs()
+                ? TrackedOutputArtifacts.fromRemoteOutputs(proto.getRemoteOutputs())
+                : TrackedOutputArtifacts.EMPTY;
+    return new ProjectTargetData(targetMap, ideInterfaceState, trackedOutputArtifacts);
   }
 
   @Override
   public TargetData toProto() {
     ProjectData.TargetData.Builder builder =
-        ProjectData.TargetData.newBuilder()
-            .setTargetMap(targetMap.toProto())
-            .setRemoteOutputs(remoteOutputs.toProto());
+        ProjectData.TargetData.newBuilder().setTargetMap(targetMap.toProto());
     ProtoWrapper.unwrapAndSetIfNotNull(builder::setIdeInterfaceState, ideInterfaceState);
+    ProtoWrapper.unwrapAndSetIfNotNull(builder::setTrackedOutputArtifacts, trackedOutputArtifacts);
     return builder.build();
   }
 
   /**
    * Filters this {@link ProjectTargetData}, keeping only the targets matching the given predicate.
    */
-  public ProjectTargetData filter(
-      Predicate<TargetKey> targetsToKeep, WorkspaceLanguageSettings settings) {
+  public ProjectTargetData filter(Predicate<TargetKey> targetsToKeep) {
     TargetMap newTargets =
         new TargetMap(ImmutableMap.copyOf(Maps.filterKeys(targetMap.map(), targetsToKeep::test)));
     BlazeIdeInterfaceState newState =
         ideInterfaceState != null ? ideInterfaceState.filter(targetsToKeep) : null;
-    RemoteOutputArtifacts newOutputs = remoteOutputs.removeUntrackedOutputs(newTargets, settings);
+    TrackedOutputArtifacts newOutputs = trackedOutputArtifacts.removeUntrackedOutputs(newTargets);
     return new ProjectTargetData(newTargets, newState, newOutputs);
   }
 
@@ -88,11 +91,11 @@ public final class ProjectTargetData implements ProtoWrapper<ProjectData.TargetD
     ProjectTargetData that = (ProjectTargetData) o;
     return targetMap.equals(that.targetMap)
         && Objects.equals(ideInterfaceState, that.ideInterfaceState)
-        && remoteOutputs.equals(that.remoteOutputs);
+        && trackedOutputArtifacts.equals(that.trackedOutputArtifacts);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(targetMap, ideInterfaceState, remoteOutputs);
+    return Objects.hash(targetMap, ideInterfaceState, trackedOutputArtifacts);
   }
 }

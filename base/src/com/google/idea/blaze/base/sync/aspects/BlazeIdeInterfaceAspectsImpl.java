@@ -16,7 +16,6 @@
 package com.google.idea.blaze.base.sync.aspects;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -57,7 +56,7 @@ import com.google.idea.blaze.base.lang.AdditionalLanguagesHelper;
 import com.google.idea.blaze.base.model.BlazeProjectData;
 import com.google.idea.blaze.base.model.BlazeVersionData;
 import com.google.idea.blaze.base.model.ProjectTargetData;
-import com.google.idea.blaze.base.model.RemoteOutputArtifacts;
+import com.google.idea.blaze.base.model.TrackedOutputArtifacts;
 import com.google.idea.blaze.base.model.primitives.Kind;
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.google.idea.blaze.base.model.primitives.TargetExpression;
@@ -162,24 +161,14 @@ public class BlazeIdeInterfaceAspectsImpl implements BlazeIdeInterface {
     }
     context.output(PrintOutput.log("Target map size: " + state.targetMap.targets().size()));
 
-    RemoteOutputArtifacts oldRemoteOutputs = RemoteOutputArtifacts.fromProjectData(oldProjectData);
+    TrackedOutputArtifacts oldArtifacts = TrackedOutputArtifacts.fromProjectData(oldProjectData);
     // combine outputs map, then filter to remove out-of-date / unnecessary items
-    RemoteOutputArtifacts newRemoteOutputs =
-        oldRemoteOutputs
-            .appendNewOutputs(getTrackedOutputs(buildResult))
-            .removeUntrackedOutputs(state.targetMap, projectState.getLanguageSettings());
+    TrackedOutputArtifacts newArtifacts =
+        oldArtifacts
+            .appendNewOutputs(buildResult.getTrackedOutputs())
+            .removeUntrackedOutputs(state.targetMap);
 
-    return new ProjectTargetData(state.targetMap, state.state, newRemoteOutputs);
-  }
-
-  /** Returns the {@link OutputArtifact}s we want to track between syncs. */
-  private static ImmutableSet<OutputArtifact> getTrackedOutputs(BlazeBuildOutputs buildOutput) {
-    // don't track intellij-info.txt outputs -- they're already tracked in
-    // BlazeIdeInterfaceState
-    Predicate<String> pathFilter = AspectStrategy.ASPECT_OUTPUT_FILE_PREDICATE.negate();
-    return buildOutput.getOutputGroupArtifacts(group -> true).stream()
-        .filter(a -> pathFilter.test(a.getRelativePath()))
-        .collect(toImmutableSet());
+    return new ProjectTargetData(state.targetMap, state.state, newArtifacts);
   }
 
   @Nullable

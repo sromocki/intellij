@@ -15,20 +15,27 @@
  */
 package com.google.idea.blaze.base.command.buildresult;
 
+import com.google.devtools.intellij.model.ProjectData.LocalFileOrOutputArtifact;
 import com.google.idea.blaze.base.filecache.ArtifactState;
+import com.google.idea.blaze.base.ideinfo.ProtoWrapper;
+import com.intellij.openapi.extensions.ExtensionPointName;
+import java.io.File;
+import java.util.Arrays;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /** A blaze output artifact, generated during some build action. */
-public interface OutputArtifact extends BlazeArtifact {
+public abstract class OutputArtifact
+    implements BlazeArtifact, ProtoWrapper<LocalFileOrOutputArtifact> {
 
   /** Returns the length of the underlying file in bytes, or 0 if this can't be determined. */
-  long getLength();
+  public abstract long getLength();
 
   /** The path component related to the build configuration. */
-  String getConfigurationMnemonic();
+  public abstract String getConfigurationMnemonic();
 
   /** The blaze-out-relative path. */
-  String getRelativePath();
+  public abstract String getRelativePath();
 
   /**
    * A key uniquely identifying an artifact between builds. Different versions of an artifact
@@ -36,7 +43,7 @@ public interface OutputArtifact extends BlazeArtifact {
    *
    * <p>TODO(brendandouglas): remove this in favor of ArtifactState#getKey
    */
-  default String getKey() {
+  public String getKey() {
     return getRelativePath();
   }
 
@@ -45,5 +52,45 @@ public interface OutputArtifact extends BlazeArtifact {
    * require file system operations.
    */
   @Nullable
-  ArtifactState toArtifactState();
+  public abstract ArtifactState toArtifactState();
+
+  @Nullable
+  public static OutputArtifact fromProto(
+      LocalFileOrOutputArtifact proto, @Nullable File outputBase) {
+    return Arrays.stream(OutputArtifact.Parser.EP_NAME.getExtensions())
+        .map(p -> p.parseProto(proto, outputBase))
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElse(null);
+  }
+
+  /** Converts {@link LocalFileOrOutputArtifact} to {@link OutputArtifact}. */
+  public interface Parser {
+    ExtensionPointName<OutputArtifact.Parser> EP_NAME =
+        ExtensionPointName.create("com.google.idea.blaze.OutputArtifactProtoParser");
+
+    @Nullable
+    OutputArtifact parseProto(LocalFileOrOutputArtifact proto, @Nullable File outputBase);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+    if (!(obj instanceof OutputArtifact)) {
+      return false;
+    }
+    return getRelativePath().equals(((OutputArtifact) obj).getRelativePath());
+  }
+
+  @Override
+  public int hashCode() {
+    return getRelativePath().hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return getRelativePath();
+  }
 }

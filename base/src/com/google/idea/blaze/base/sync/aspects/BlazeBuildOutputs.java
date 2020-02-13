@@ -18,12 +18,17 @@ package com.google.idea.blaze.base.sync.aspects;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimaps;
 import com.google.idea.blaze.base.command.buildresult.BepArtifactData;
 import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
 import com.google.idea.blaze.base.command.buildresult.ParsedBepOutput;
+import com.google.idea.blaze.base.model.TrackedOutputArtifacts;
+import com.google.idea.blaze.base.sync.aspects.strategy.AspectStrategy;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -112,5 +117,23 @@ public class BlazeBuildOutputs {
         BuildResult.combine(buildResult, nextOutputs.buildResult),
         combined,
         ImmutableList.<String>builder().addAll(buildIds).addAll(nextOutputs.buildIds).build());
+  }
+
+  TrackedOutputArtifacts getTrackedOutputs() {
+    // don't track intellij-info.txt outputs -- they're already tracked in
+    // BlazeIdeInterfaceState
+    Predicate<String> pathFilter = AspectStrategy.ASPECT_OUTPUT_FILE_PREDICATE.negate();
+    return new TrackedOutputArtifacts(
+        ImmutableSetMultimap.copyOf(
+            Multimaps.invertFrom(
+                Multimaps.transformValues(
+                    Multimaps.forMap(
+                        Multimaps.invertFrom(
+                                Multimaps.filterValues(
+                                    perTargetArtifacts, a -> pathFilter.test(a.getRelativePath())),
+                                HashMultimap.create())
+                            .asMap()),
+                    ImmutableSet::copyOf),
+                HashMultimap.create())));
   }
 }

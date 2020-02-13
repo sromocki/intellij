@@ -71,29 +71,32 @@ public final class BlazeProjectData implements ProtoWrapper<ProjectData.BlazePro
     BlazeInfo blazeInfo = BlazeInfo.fromProto(buildSystem, proto.getBlazeInfo());
     WorkspacePathResolver workspacePathResolver =
         WorkspacePathResolver.fromProto(proto.getWorkspacePathResolver());
-    ProjectTargetData targetData = parseTargetData(proto);
+    ProjectTargetData targetData = parseTargetData(proto, blazeInfo.getOutputBase());
     return new BlazeProjectData(
         targetData,
         blazeInfo,
         BlazeVersionData.fromProto(proto.getBlazeVersionData()),
         workspacePathResolver,
-        new ArtifactLocationDecoderImpl(blazeInfo, workspacePathResolver, targetData.remoteOutputs),
+        new ArtifactLocationDecoderImpl(
+            blazeInfo, workspacePathResolver, targetData.trackedOutputArtifacts),
         WorkspaceLanguageSettings.fromProto(proto.getWorkspaceLanguageSettings()),
         SyncState.fromProto(proto.getSyncState()));
   }
 
-  private static ProjectTargetData parseTargetData(ProjectData.BlazeProjectData proto) {
+  private static ProjectTargetData parseTargetData(
+      ProjectData.BlazeProjectData proto, File outputBase) {
     if (proto.hasTargetData()) {
-      return ProjectTargetData.fromProto(proto.getTargetData());
+      return ProjectTargetData.fromProto(proto.getTargetData(), outputBase);
     }
     // handle older version of project data
     TargetMap map = TargetMap.fromProto(proto.getTargetMap());
     BlazeIdeInterfaceState ideInterfaceState =
         BlazeIdeInterfaceState.fromProto(proto.getSyncState().getBlazeIdeInterfaceState());
-    RemoteOutputArtifacts remoteOutputs =
+    TrackedOutputArtifacts remoteOutputs =
         proto.getSyncState().hasRemoteOutputArtifacts()
-            ? RemoteOutputArtifacts.fromProto(proto.getSyncState().getRemoteOutputArtifacts())
-            : RemoteOutputArtifacts.EMPTY;
+            ? TrackedOutputArtifacts.fromRemoteOutputs(
+                proto.getSyncState().getRemoteOutputArtifacts())
+            : TrackedOutputArtifacts.EMPTY;
     return new ProjectTargetData(map, ideInterfaceState, remoteOutputs);
   }
 
@@ -137,8 +140,8 @@ public final class BlazeProjectData implements ProtoWrapper<ProjectData.BlazePro
     return workspaceLanguageSettings;
   }
 
-  public RemoteOutputArtifacts getRemoteOutputs() {
-    return targetData.remoteOutputs;
+  public TrackedOutputArtifacts getOutputArtifacts() {
+    return targetData.trackedOutputArtifacts;
   }
 
   public SyncState getSyncState() {

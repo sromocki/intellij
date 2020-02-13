@@ -15,7 +15,6 @@
  */
 package com.google.idea.blaze.javascript;
 
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
@@ -41,7 +40,7 @@ public class JavascriptPrefetchFileSource implements PrefetchFileSource, Outputs
   }
 
   @Override
-  public Collection<ArtifactLocation> selectAllRelevantOutputs(TargetIdeInfo target) {
+  public Collection<ArtifactLocation> selectOutputsToCache(TargetIdeInfo target) {
     return getJsSources(target);
   }
 

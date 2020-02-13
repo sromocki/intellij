@@ -15,7 +15,6 @@
  */
 package com.google.idea.blaze.base.sync;
 
-
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -29,8 +28,8 @@ import com.google.idea.blaze.base.model.BlazeLibrary;
 import com.google.idea.blaze.base.model.BlazeProjectData;
 import com.google.idea.blaze.base.model.BlazeVersionData;
 import com.google.idea.blaze.base.model.ProjectTargetData;
-import com.google.idea.blaze.base.model.RemoteOutputArtifacts;
 import com.google.idea.blaze.base.model.SyncState;
+import com.google.idea.blaze.base.model.TrackedOutputArtifacts;
 import com.google.idea.blaze.base.model.primitives.WorkspaceRoot;
 import com.google.idea.blaze.base.prefetch.PrefetchService;
 import com.google.idea.blaze.base.projectview.ProjectViewSet;
@@ -157,12 +156,12 @@ final class ProjectUpdateSyncTask {
 
   private void run(BlazeContext context) throws SyncCanceledException, SyncFailedException {
     TargetMap targetMap = targetData.targetMap;
-    RemoteOutputArtifacts oldRemoteState = RemoteOutputArtifacts.fromProjectData(oldProjectData);
-    RemoteOutputArtifacts newRemoteState = targetData.remoteOutputs;
+    TrackedOutputArtifacts oldArtifacts = TrackedOutputArtifacts.fromProjectData(oldProjectData);
+    TrackedOutputArtifacts newArtifacts = targetData.trackedOutputArtifacts;
 
     ArtifactLocationDecoder artifactLocationDecoder =
         new ArtifactLocationDecoderImpl(
-            projectState.getBlazeInfo(), projectState.getWorkspacePathResolver(), newRemoteState);
+            projectState.getBlazeInfo(), projectState.getWorkspacePathResolver(), newArtifacts);
 
     Scope.push(
         context,
@@ -173,8 +172,8 @@ final class ProjectUpdateSyncTask {
                   context,
                   targetMap,
                   projectState.getLanguageSettings(),
-                  newRemoteState,
-                  oldRemoteState,
+                  newArtifacts,
+                  oldArtifacts,
                   /* clearCache= */ syncMode == SyncMode.FULL);
         });
 

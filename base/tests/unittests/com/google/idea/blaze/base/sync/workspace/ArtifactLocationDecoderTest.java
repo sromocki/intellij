@@ -21,7 +21,7 @@ import com.google.devtools.intellij.aspect.Common;
 import com.google.idea.blaze.base.BlazeTestCase;
 import com.google.idea.blaze.base.command.info.BlazeInfo;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
-import com.google.idea.blaze.base.model.RemoteOutputArtifacts;
+import com.google.idea.blaze.base.model.TrackedOutputArtifacts;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -51,7 +51,7 @@ public class ArtifactLocationDecoderTest extends BlazeTestCase {
                 EXECUTION_ROOT + "/blaze-out/crosstool/genfiles",
                 EXECUTION_ROOT + "/blaze-out/crosstool/testlogs"),
             null,
-            RemoteOutputArtifacts.EMPTY);
+            TrackedOutputArtifacts.EMPTY);
 
     assertThat(decoder.decode(artifactLocation).getPath())
         .isEqualTo(EXECUTION_ROOT + "/blaze-out/bin/com/google/Bla.java");
@@ -80,7 +80,7 @@ public class ArtifactLocationDecoderTest extends BlazeTestCase {
                 EXECUTION_ROOT + "/blaze-out/crosstool/genfiles",
                 EXECUTION_ROOT + "/blaze-out/crosstool/testlogs"),
             null,
-            RemoteOutputArtifacts.EMPTY);
+            TrackedOutputArtifacts.EMPTY);
 
     assertThat(decoder.decode(artifactLocation).getPath())
         .isEqualTo(EXECUTION_ROOT + "/external/repo_name/com/google/Bla.java");
@@ -110,7 +110,7 @@ public class ArtifactLocationDecoderTest extends BlazeTestCase {
                 EXECUTION_ROOT + "/blaze-out/crosstool/genfiles",
                 EXECUTION_ROOT + "/blaze-out/crosstool/testlogs"),
             null,
-            RemoteOutputArtifacts.EMPTY);
+            TrackedOutputArtifacts.EMPTY);
 
     assertThat(decoder.decode(artifactLocation).getPath())
         .isEqualTo(
@@ -142,7 +142,7 @@ public class ArtifactLocationDecoderTest extends BlazeTestCase {
                 EXECUTION_ROOT + "/blaze-out/crosstool/genfiles",
                 EXECUTION_ROOT + "/blaze-out/crosstool/testlogs"),
             null,
-            RemoteOutputArtifacts.EMPTY);
+            TrackedOutputArtifacts.EMPTY);
 
     assertThat(decoder.decode(artifactLocation).getPath())
         .isEqualTo(OUTPUT_BASE + "/execroot/repo_name/com/google/Bla.java");
@@ -172,7 +172,7 @@ public class ArtifactLocationDecoderTest extends BlazeTestCase {
                 EXECUTION_ROOT + "/blaze-out/crosstool/genfiles",
                 EXECUTION_ROOT + "/blaze-out/crosstool/testlogs"),
             null,
-            RemoteOutputArtifacts.EMPTY);
+            TrackedOutputArtifacts.EMPTY);
 
     assertThat(decoder.decode(artifactLocation).getPath())
         .isEqualTo(OUTPUT_BASE + "/execroot/repo_name/blaze-out/crosstool/bin/com/google/Bla.java");

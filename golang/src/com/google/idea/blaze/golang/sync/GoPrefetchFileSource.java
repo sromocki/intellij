@@ -15,7 +15,6 @@
  */
 package com.google.idea.blaze.golang.sync;
 
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
@@ -41,7 +40,7 @@ public class GoPrefetchFileSource implements PrefetchFileSource, OutputsProvider
   }
 
   @Override
-  public Collection<ArtifactLocation> selectAllRelevantOutputs(TargetIdeInfo target) {
+  public Collection<ArtifactLocation> selectOutputsToCache(TargetIdeInfo target) {
     return target.getGoIdeInfo() != null ? target.getGoIdeInfo().getSources() : ImmutableList.of();
   }
 

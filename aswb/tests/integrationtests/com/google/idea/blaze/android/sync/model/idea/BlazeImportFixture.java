@@ -38,8 +38,8 @@ import com.google.idea.blaze.base.ideinfo.TargetMap;
 import com.google.idea.blaze.base.ideinfo.TargetMapBuilder;
 import com.google.idea.blaze.base.model.BlazeProjectData;
 import com.google.idea.blaze.base.model.MockBlazeProjectDataBuilder;
-import com.google.idea.blaze.base.model.RemoteOutputArtifacts;
 import com.google.idea.blaze.base.model.SyncState;
+import com.google.idea.blaze.base.model.TrackedOutputArtifacts;
 import com.google.idea.blaze.base.model.primitives.Label;
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
 import com.google.idea.blaze.base.model.primitives.WorkspacePath;
@@ -176,7 +176,7 @@ public final class BlazeImportFixture {
 
   public ArtifactLocationDecoder getDecoder() {
     return new ArtifactLocationDecoderImpl(
-        getBlazeInfo(), new WorkspacePathResolverImpl(workspaceRoot), RemoteOutputArtifacts.EMPTY);
+        getBlazeInfo(), new WorkspacePathResolverImpl(workspaceRoot), TrackedOutputArtifacts.EMPTY);
   }
 
   public static File decodePath(ArtifactLocation location) {

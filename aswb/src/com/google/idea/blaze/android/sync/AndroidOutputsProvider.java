@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.idea.blaze.base.ideinfo.AndroidIdeInfo;
 import com.google.idea.blaze.base.ideinfo.AndroidResFolder;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
-import com.google.idea.blaze.base.ideinfo.LibraryArtifact;
 import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
 import com.google.idea.blaze.base.model.OutputsProvider;
 import com.google.idea.blaze.base.model.primitives.LanguageClass;
@@ -27,54 +26,12 @@ import com.google.idea.blaze.base.sync.projectview.WorkspaceLanguageSettings;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /** Used to track blaze artifacts relevant to android projects. */
 public class AndroidOutputsProvider implements OutputsProvider {
   @Override
   public boolean isActive(WorkspaceLanguageSettings languageSettings) {
     return languageSettings.isLanguageActive(LanguageClass.ANDROID);
-  }
-
-  @Override
-  public Collection<ArtifactLocation> selectAllRelevantOutputs(TargetIdeInfo target) {
-    if (target.getJavaToolchainIdeInfo() != null) {
-      return target.getJavaToolchainIdeInfo().getJavacJars();
-    }
-    if (target.getAndroidSdkIdeInfo() != null) {
-      return ImmutableList.of(target.getAndroidSdkIdeInfo().getAndroidJar());
-    }
-    if (target.getAndroidAarIdeInfo() != null) {
-      return ImmutableList.of(target.getAndroidAarIdeInfo().getAar());
-    }
-
-    if (target.getAndroidIdeInfo() == null) {
-      return ImmutableList.of();
-    }
-    AndroidIdeInfo androidInfo = target.getAndroidIdeInfo();
-
-    ImmutableList.Builder<ArtifactLocation> list = ImmutableList.builder();
-    androidInfo.getResFolders().forEach(f -> addArtifact(list, f.getRoot()));
-    addLibrary(list, androidInfo.getResourceJar());
-    addLibrary(list, androidInfo.getIdlJar());
-    addArtifact(list, androidInfo.getManifest());
-    return list.build();
-  }
-
-  private static void addLibrary(
-      ImmutableList.Builder<ArtifactLocation> list, @Nullable LibraryArtifact library) {
-    if (library != null) {
-      addArtifact(list, library.getInterfaceJar());
-      addArtifact(list, library.getClassJar());
-      library.getSourceJars().forEach(j -> addArtifact(list, j));
-    }
-  }
-
-  private static void addArtifact(
-      ImmutableList.Builder<ArtifactLocation> list, @Nullable ArtifactLocation artifact) {
-    if (artifact != null) {
-      list.add(artifact);
-    }
   }
 
   @Override
@@ -93,12 +50,12 @@ public class AndroidOutputsProvider implements OutputsProvider {
     Set<ArtifactLocation> fileSet = new HashSet<>();
 
     ArtifactLocation manifest = androidInfo.getManifest();
-      if (manifest != null) {
-        fileSet.add(manifest);
-      }
+    if (manifest != null) {
+      fileSet.add(manifest);
+    }
     fileSet.addAll(androidInfo.getResources());
     for (AndroidResFolder androidResFolder : androidInfo.getResFolders()) {
-        fileSet.add(androidResFolder.getRoot());
+      fileSet.add(androidResFolder.getRoot());
     }
     return fileSet;
   }

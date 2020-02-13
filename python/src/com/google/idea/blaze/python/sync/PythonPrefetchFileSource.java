@@ -15,7 +15,6 @@
  */
 package com.google.idea.blaze.python.sync;
 
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.idea.blaze.base.command.buildresult.OutputArtifactResolver;
@@ -53,7 +52,7 @@ public class PythonPrefetchFileSource implements PrefetchFileSource, OutputsProv
   }
 
   @Override
-  public Collection<ArtifactLocation> selectAllRelevantOutputs(TargetIdeInfo target) {
+  public Collection<ArtifactLocation> selectOutputsToCache(TargetIdeInfo target) {
     return target.getPyIdeInfo() != null ? target.getPyIdeInfo().getSources() : ImmutableList.of();
   }
 

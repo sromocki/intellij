@@ -15,6 +15,7 @@
  */
 package com.google.idea.blaze.base.model;
 
+import com.google.idea.blaze.base.filecache.RemoteOutputsCache;
 import com.google.idea.blaze.base.ideinfo.ArtifactLocation;
 import com.google.idea.blaze.base.ideinfo.TargetIdeInfo;
 import com.google.idea.blaze.base.sync.projectview.WorkspaceLanguageSettings;
@@ -23,7 +24,7 @@ import java.util.Collection;
 
 /**
  * An extension point for individual languages to provide the list of output artifacts which should
- * be tracked and locally cached in {@link RemoteOutputsCache}.
+ * be locally cached in {@link RemoteOutputsCache}.
  */
 public interface OutputsProvider {
 
@@ -31,24 +32,10 @@ public interface OutputsProvider {
       ExtensionPointName.create("com.google.idea.blaze.OutputsProvider");
 
   /**
-   * Returns the artifacts in this {@link TargetIdeInfo} which are relevant to this provider, and
-   * should be tracked between syncs.
-   *
-   * <p>Any remote artifacts not returned here by some {@link OutputsProvider} will be dropped from
-   * {@link RemoteOutputArtifacts} and entirely inaccessible.
-   */
-  Collection<ArtifactLocation> selectAllRelevantOutputs(TargetIdeInfo target);
-
-  /**
    * Returns the artifacts in this {@link TargetIdeInfo} which should be locally cached via {@link
    * RemoteOutputsCache}.
-   *
-   * <p>By default this is all artifacts from {@link #selectAllRelevantOutputs(TargetIdeInfo)}. One
-   * exception is when the artifacts are cached separately, for example in {@link JarCache}.
    */
-  default Collection<ArtifactLocation> selectOutputsToCache(TargetIdeInfo target) {
-    return selectAllRelevantOutputs(target);
-  }
+  Collection<ArtifactLocation> selectOutputsToCache(TargetIdeInfo target);
 
   boolean isActive(WorkspaceLanguageSettings languageSettings);
 }

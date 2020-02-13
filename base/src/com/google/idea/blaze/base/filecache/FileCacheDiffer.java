@@ -20,9 +20,10 @@ import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.idea.blaze.base.command.buildresult.BlazeArtifact;
 import com.google.idea.blaze.base.command.buildresult.BlazeArtifact.LocalFileArtifact;
+import com.google.idea.blaze.base.command.buildresult.OutputArtifact;
 import com.google.idea.blaze.base.command.buildresult.RemoteOutputArtifact;
 import com.google.idea.blaze.base.io.ModifiedTimeScanner;
-import com.google.idea.blaze.base.model.RemoteOutputArtifacts;
+import com.google.idea.blaze.base.model.TrackedOutputArtifacts;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,7 +44,7 @@ public final class FileCacheDiffer {
   public static <O extends BlazeArtifact> Map<String, O> findUpdatedOutputs(
       Map<String, O> newOutputs,
       Map<String, File> cachedFiles,
-      RemoteOutputArtifacts previousOutputs)
+      TrackedOutputArtifacts previousOutputs)
       throws InterruptedException, ExecutionException {
     ImmutableMap<File, Long> timestamps = readTimestamps(newOutputs, cachedFiles);
     return newOutputs.entrySet().stream()
@@ -79,7 +80,7 @@ public final class FileCacheDiffer {
   private static boolean shouldUpdate(
       String key,
       BlazeArtifact newOutput,
-      RemoteOutputArtifacts previousOutputs,
+      TrackedOutputArtifacts previousOutputs,
       Map<File, Long> timestamps,
       Map<String, File> cachedFiles) {
     if (newOutput instanceof LocalFileArtifact) {
@@ -90,8 +91,8 @@ public final class FileCacheDiffer {
   }
 
   private static boolean shouldUpdateRemote(
-      RemoteOutputArtifact newOutput, RemoteOutputArtifacts previousOutputs) {
-    RemoteOutputArtifact previous = previousOutputs.findRemoteOutput(newOutput.getRelativePath());
+      RemoteOutputArtifact newOutput, TrackedOutputArtifacts previousOutputs) {
+    OutputArtifact previous = previousOutputs.findOutputArtifact(newOutput.getRelativePath());
     if (previous == null) {
       return true;
     }

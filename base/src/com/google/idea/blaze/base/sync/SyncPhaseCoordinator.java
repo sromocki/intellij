@@ -306,10 +306,7 @@ final class SyncPhaseCoordinator {
                 if (projectState == null) {
                   return;
                 }
-                ProjectTargetData targetData =
-                    oldProjectData
-                        .getTargetData()
-                        .filter(filter, projectState.getLanguageSettings());
+                ProjectTargetData targetData = oldProjectData.getTargetData().filter(filter);
 
                 fillInBuildStats(stats, projectState, /* buildResult= */ null);
                 ProjectUpdateSyncTask.runProjectUpdatePhase(

@@ -16,43 +16,31 @@
 package com.google.idea.blaze.base.command.buildresult;
 
 import com.google.devtools.intellij.model.ProjectData;
+import com.google.devtools.intellij.model.ProjectData.LocalFileOrOutputArtifact;
 import com.google.idea.blaze.base.filecache.ArtifactState;
 import com.google.idea.blaze.base.filecache.ArtifactState.RemoteOutputState;
-import com.google.idea.blaze.base.ideinfo.ProtoWrapper;
-import com.intellij.openapi.extensions.ExtensionPointName;
-import java.util.Arrays;
-import java.util.Objects;
-import javax.annotation.Nullable;
 
 /** A blaze output artifact which is hosted by some remote service. */
-public interface RemoteOutputArtifact
-    extends OutputArtifact, ProtoWrapper<ProjectData.OutputArtifact> {
-
-  @Nullable
-  static RemoteOutputArtifact fromProto(ProjectData.OutputArtifact proto) {
-    return Arrays.stream(Parser.EP_NAME.getExtensions())
-        .map(p -> p.parseProto(proto))
-        .filter(Objects::nonNull)
-        .findFirst()
-        .orElse(null);
-  }
+public abstract class RemoteOutputArtifact extends OutputArtifact {
 
   @Override
-  default ArtifactState toArtifactState() {
+  public ArtifactState toArtifactState() {
     return new RemoteOutputState(getRelativePath(), getHashId(), getSyncTimeMillis());
   }
 
   @Override
-  default ProjectData.OutputArtifact toProto() {
-    return ProjectData.OutputArtifact.newBuilder()
-        .setRelativePath(getRelativePath())
-        .setId(getHashId())
-        .setSyncStartTimeMillis(getSyncTimeMillis())
+  public LocalFileOrOutputArtifact toProto() {
+    return LocalFileOrOutputArtifact.newBuilder()
+        .setArtifact(
+            ProjectData.OutputArtifact.newBuilder()
+                .setRelativePath(getRelativePath())
+                .setId(getHashId())
+                .setSyncStartTimeMillis(getSyncTimeMillis()))
         .build();
   }
 
   /** Reads the artifact contents into memory, using a soft reference. */
-  void prefetch();
+  public abstract void prefetch();
 
   /**
    * A string uniquely identifying this artifact. Instances of this artifact with different contents
@@ -60,16 +48,7 @@ public interface RemoteOutputArtifact
    *
    * <p>May be used to retrieve it from a remote caching service.
    */
-  String getHashId();
+  public abstract String getHashId();
 
-  long getSyncTimeMillis();
-
-  /** Converts ProjectData.OutputArtifact to RemoteOutputArtifact. */
-  interface Parser {
-    ExtensionPointName<Parser> EP_NAME =
-        ExtensionPointName.create("com.google.idea.blaze.RemoteOutputArtifactParser");
-
-    @Nullable
-    RemoteOutputArtifact parseProto(ProjectData.OutputArtifact proto);
-  }
+  public abstract long getSyncTimeMillis();
 }
