@@ -38,6 +38,7 @@ import com.google.idea.blaze.base.run.confighandler.BlazeCommandRunConfiguration
 import com.google.idea.blaze.base.run.confighandler.BlazeCommandRunConfigurationHandlerProvider;
 import com.google.idea.blaze.base.run.confighandler.BlazeCommandRunConfigurationHandlerProvider.TargetState;
 import com.google.idea.blaze.base.run.confighandler.BlazeCommandRunConfigurationRunner;
+import com.google.idea.blaze.base.run.state.ConsoleOutputFileSettingsUi;
 import com.google.idea.blaze.base.run.state.RunConfigurationState;
 import com.google.idea.blaze.base.run.state.RunConfigurationStateEditor;
 import com.google.idea.blaze.base.run.targetfinder.FuturesUtil;
@@ -524,6 +525,7 @@ public class BlazeCommandRunConfiguration extends LocatableConfigurationBase
     private final Box editor;
     private final JBCheckBox keepInSyncCheckBox;
     private final JBLabel targetExpressionLabel;
+    private final ConsoleOutputFileSettingsUi<BlazeCommandRunConfiguration> outputFileUi;
     private final TextFieldWithAutoCompletion<String> targetField;
 
     BlazeCommandRunConfigurationSettingsEditor(BlazeCommandRunConfiguration config) {
@@ -534,8 +536,11 @@ public class BlazeCommandRunConfiguration extends LocatableConfigurationBase
       elementState = config.blazeElementState.clone();
       targetExpressionLabel = new JBLabel(UIUtil.ComponentStyle.LARGE);
       keepInSyncCheckBox = new JBCheckBox("Keep in sync with source XML");
+      outputFileUi = new ConsoleOutputFileSettingsUi<>();
       editorWithoutSyncCheckBox = UiUtil.createBox(targetExpressionLabel, targetField);
-      editor = UiUtil.createBox(editorWithoutSyncCheckBox, keepInSyncCheckBox);
+      editor =
+          UiUtil.createBox(
+              editorWithoutSyncCheckBox, outputFileUi.getComponent(), keepInSyncCheckBox);
       updateEditor(config);
       updateHandlerEditor(config);
       keepInSyncCheckBox.addItemListener(e -> updateEnabledStatus());
@@ -562,6 +567,7 @@ public class BlazeCommandRunConfiguration extends LocatableConfigurationBase
         handlerStateEditor.setComponentEnabled(enabled);
       }
       targetField.setEnabled(enabled);
+      outputFileUi.setComponentEnabled(enabled);
     }
 
     private void updateHandlerEditor(BlazeCommandRunConfiguration config) {
@@ -594,11 +600,13 @@ public class BlazeCommandRunConfiguration extends LocatableConfigurationBase
         updateHandlerEditor(config);
       }
       targetField.setText(config.targetPattern);
+      outputFileUi.resetEditorFrom(config);
       handlerStateEditor.resetEditorFrom(config.handler.getState());
     }
 
     @Override
     protected void applyEditorTo(BlazeCommandRunConfiguration config) {
+      outputFileUi.applyEditorTo(config);
       handlerStateEditor.applyEditorTo(handler.getState());
       try {
         handler.getState().writeExternal(elementState);
